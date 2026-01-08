@@ -10,6 +10,7 @@ echo "Starting MongoDB setup..."
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOTSTRAP_SCRIPT="${SCRIPT_DIR}/bootstrap_mongo.sh"
+SEED_SCRIPT="${SCRIPT_DIR}/seed_mongo_dev_data.sh"
 
 run_bootstrap() {
     if [ -f "${BOOTSTRAP_SCRIPT}" ]; then
@@ -21,6 +22,19 @@ run_bootstrap() {
         echo ""
     else
         echo "⚠ Bootstrap script not found at ${BOOTSTRAP_SCRIPT} (skipping)."
+    fi
+}
+
+run_seed() {
+    if [ -f "${SEED_SCRIPT}" ]; then
+        echo ""
+        echo "Seeding minimal MongoDB development data..."
+        bash "${SEED_SCRIPT}" || {
+            echo "⚠ Seed failed (non-fatal for startup), please check logs above."
+        }
+        echo ""
+    else
+        echo "⚠ Seed script not found at ${SEED_SCRIPT} (skipping)."
     fi
 }
 
@@ -50,6 +64,9 @@ EOF
 
     # Bootstrap collections/indexes even if server already running
     run_bootstrap
+
+    # Seed minimal dev data (idempotent)
+    run_seed
 
     echo ""
     echo "Database: ${DB_NAME}"
@@ -155,6 +172,9 @@ EOF
 
 # Bootstrap core collections/indexes after auth/user creation
 run_bootstrap
+
+# Seed minimal dev data (idempotent)
+run_seed
 
 echo "MongoDB setup complete!"
 echo "Database: ${DB_NAME}"
